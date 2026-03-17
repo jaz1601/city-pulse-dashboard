@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Pulse - Article Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .city-list {
+            list-style: none;
+        }
+        
+        .city-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .city-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+        
+        .city-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .city-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .section-header h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .article-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: grab;
+            position: relative;
+        }
+        
+        .article-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .article-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .article-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        
+        .article-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .article-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .article-preview {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .article-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-published {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .drop-zone.drag-over {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #764ba2;
+        }
+        
+        .drop-zone h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .drop-zone p {
+            color: #666;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.3rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .export-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .export-panel h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .export-code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏙️ City Pulse Dashboard</h1>
+            <p>Manage and organize articles for your South African city news network</p>
+        </header>
+        
+        <div class="dashboard">
+            <aside class="sidebar">
+                <h2>📍 Cities</h2>
+                <ul class="city-list">
+                    <li class="city-item active" data-city="all">
+                        <span class="city-icon">🌍</span>
+                        <span>All Cities</span>
+                    </li>
+                    <li class="city-item" data-city="cape-town">
+                        <span class="city-icon">🌅</span>
+                        <span>Cape Town</span>
+                    </li>
+                    <li class="city-item" data-city="pretoria">
+                        <span class="city-icon">🏛️</span>
+                        <span>Pretoria</span>
+                    </li>
+                    <li class="city-item" data-city="johannesburg">
+                        <span class="city-icon">🏢</span>
+                        <span>Johannesburg</span>
+                    </li>
+                </ul>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                    <h2>📊 Stats</h2>
+                    <div style="margin-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Total Articles:</span>
+                            <strong id="total-count">0</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Drafts:</span>
+                            <strong id="draft-count">0</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Published:</span>
+                            <strong id="published-count">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            
+            <main class="main-content">
+                <div class="section-header">
+                    <h2 id="current-city">All Articles</h2>
+                    <button class="btn btn-primary" onclick="openModal()">
+                        <span>+</span> New Article
+                    </button>
+                </div>
+                
+                <div class="articles-grid" id="articles-container">
+                    <!-- Articles will be loaded here -->
+                </div>
+                
+                <div class="drop-zone" id="drop-zone">
+                    <h3>📥 Drag & Drop Zone</h3>
+                    <p>Drag articles here to prepare for Letterman export</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: #999;">
+                        Drop articles to generate JSON for Letterman import
+                    </p>
+                </div>
+                
+                <div class="export-panel" id="export-panel" style="display: none;">
+                    <h4>📋 Letterman Export JSON</h4>
+                    <p style="margin-bottom: 10px; font-size: 0.9rem; color: #666;">
+                        Copy this JSON and use it with the Letterman API
+                    </p>
+                    <pre class="export-code" id="export-code"></pre>
+                    <button class="btn btn-secondary" onclick="copyToClipboard()" style="margin-top: 10px;">
+                        📋 Copy to Clipboard
+                    </button>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modal for New Article -->
+    <div class="modal" id="article-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 Create New Article</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="article-form">
+                <div class="form-group">
+                    <label for="article-city">City</label>
+                    <select id="article-city" required>
+                        <option value="">Select a city...</option>
+                        <option value="cape-town">Cape Town</option>
+                        <option value="pretoria">Pretoria</option>
+                        <option value="johannesburg">Johannesburg</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="article-title">Headline</label>
+                    <input type="text" id="article-title" placeholder="Enter article headline..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="article-subtitle">Subheadline</label>
+                    <input type="text" id="article-subtitle" placeholder="Enter subheadline...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="article-content">Content (HTML)</label>
+                    <textarea id="article-content" placeholder="<p>Your article content here...</p>" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="article-keywords">Keywords (comma-separated)</label>
+                    <input type="text" id="article-keywords" placeholder="news, local, community">
+                </div>
+                
+                <div class="form-group">
+                    <label for="article-summary">Summary</label>
+                    <textarea id="article-summary" placeholder="Brief summary for preview..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    💾 Save Article
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Article storage
+        let articles = JSON.parse(localStorage.getItem('cityPulseArticles')) || [];
+        let currentCity = 'all';
+        let draggedArticle = null;
+        
+        // City configurations
+        const cityConfigs = {
+            'cape-town': {
+                name: 'Cape Town City Pulse',
+                storageId: '69b8f1f847872b28b4e44ff5',
+                icon: '🌅'
+            },
+            'pretoria': {
+                name: 'Pretoria City Pulse',
+                storageId: '69b8f20747872b28b4e45014',
+                icon: '🏛️'
+            },
+            'johannesburg': {
+                name: 'Johannesburg City Pulse',
+                storageId: '69b8f21647872b28b4e45031',
+                icon: '🏢'
+            }
+        };
+        
+        // Initialize with sample articles if empty
+        if (articles.length === 0) {
+            articles = [
+                {
+                    id: '1',
+                    city: 'cape-town',
+                    title: 'New Waterfront Development Brings 500 Jobs to Cape Town',
+                    subtitle: 'R2.3 billion investment set to transform the harbor district',
+                    content: '<p>The Cape Town waterfront is set for a major transformation...</p>',
+                    keywords: ['Cape Town', 'waterfront', 'development', 'jobs'],
+                    summary: 'R2.3 billion project to bring 500 jobs to Cape Town harbor district',
+                    status: 'draft',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '2',
+                    city: 'pretoria',
+                    title: 'Pretoria Unveils Plans for Smart City Initiative',
+                    subtitle: 'Free Wi-Fi and digital services coming to all suburbs by 2027',
+                    content: '<p>The City of Tshwane has announced an ambitious Smart City Initiative...</p>',
+                    keywords: ['Pretoria', 'Smart City', 'Wi-Fi', 'digital'],
+                    summary: 'Free Wi-Fi and digital services planned for all Pretoria suburbs',
+                    status: 'draft',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: '3',
+                    city: 'johannesburg',
+                    title: 'Johannesburg Green Spaces Initiative Plants 10,000 Trees',
+                    subtitle: 'Urban forest project aims to combat heat island effect',
+                    content: '<p>The City of Johannesburg has launched an ambitious urban greening project...</p>',
+                    keywords: ['Johannesburg', 'green spaces', 'trees', 'environment'],
+                    summary: 'Urban forest project to improve air quality and create green spaces',
+                    status: 'draft',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            saveArticles();
+        }
+        
+        function saveArticles() {
+            localStorage.setItem('cityPulseArticles', JSON.stringify(articles));
+            updateStats();
+            renderArticles();
+        }
+        
+        function updateStats() {
+            const total = articles.length;
+            const drafts = articles.filter(a => a.status === 'draft').length;
+            const published = articles.filter(a => a.status === 'published').length;
+            
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('draft-count').textContent = drafts;
+            document.getElementById('published-count').textContent = published;
+        }
+        
+        function renderArticles() {
+            const container = document.getElementById('articles-container');
+            container.innerHTML = '';
+            
+            const filteredArticles = currentCity === 'all' 
+                ? articles 
+                : articles.filter(a => a.city === currentCity);
+            
+            filteredArticles.forEach(article => {
+                const card = createArticleCard(article);
+                container.appendChild(card);
+            });
+        }
+        
+        function createArticleCard(article) {
+            const cityConfig = cityConfigs[article.city];
+            const div = document.createElement('div');
+            div.className = 'article-card';
+            div.draggable = true;
+            div.dataset.articleId = article.id;
+            
+            div.innerHTML = `
+                <div class="article-header">
+                    <span class="status-badge status-${article.status}">${article.status}</span>
+                    <span style="font-size: 1.2rem;">${cityConfig.icon}</span>
+                </div>
+                <h3 class="article-title">${article.title}</h3>
+                <div class="article-meta">
+                    <span>📅 ${new Date(article.createdAt).toLocaleDateString()}</span>
+                    <span>🏙️ ${cityConfig.name}</span>
+                </div>
+                <p class="article-preview">${article.summary || article.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                <div class="article-actions">
+                    <button class="btn btn-secondary" onclick="editArticle('${article.id}')">✏️ Edit</button>
+                    <button class="btn btn-primary" onclick="exportArticle('${article.id}')">📤 Export</button>
+                    <button class="btn btn-secondary" onclick="deleteArticle('${article.id}')">🗑️ Delete</button>
+                </div>
+            `;
+            
+            // Drag events
+            div.addEventListener('dragstart', (e) => {
+                draggedArticle = article;
+                div.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'copy';
+            });
+            
+            div.addEventListener('dragend', () => {
+                div.classList.remove('dragging');
+                draggedArticle = null;
+            });
+            
+            return div;
+        }
+        
+        // City filter
+        document.querySelectorAll('.city-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.city-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                currentCity = item.dataset.city;
+                
+                const cityNames = {
+                    'all': 'All Articles',
+                    'cape-town': 'Cape Town Articles',
+                    'pretoria': 'Pretoria Articles',
+                    'johannesburg': 'Johannesburg Articles'
+                };
+                document.getElementById('current-city').textContent = cityNames[currentCity];
+                
+                renderArticles();
+            });
+        });
+        
+        // Drop zone
+        const dropZone = document.getElementById('drop-zone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            if (draggedArticle) {
+                generateExportJSON(draggedArticle);
+            }
+        });
+        
+        function generateExportJSON(article) {
+            const cityConfig = cityConfigs[article.city];
+            const exportData = {
+                storageId: cityConfig.storageId,
+                type: "ARTICLE",
+                articleOptions: {
+                    contentFrom: "CONTENT",
+                    keepOriginal: true,
+                    headline: article.title,
+                    subHeadline: article.subtitle,
+                    content: article.content,
+                    keywords: article.keywords,
+                    summary: {
+                        title: article.title,
+                        description: article.summary,
+                        content: `<p>${article.summary}</p>`
+                    }
+                }
+            };
+            
+            const exportPanel = document.getElementById('export-panel');
+            const exportCode = document.getElementById('export-code');
+            
+            exportCode.textContent = JSON.stringify(exportData, null, 2);
+            exportPanel.style.display = 'block';
+            
+            // Scroll to export panel
+            exportPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function copyToClipboard() {
+            const exportCode = document.getElementById('export-code').textContent;
+            navigator.clipboard.writeText(exportCode).then(() => {
+                alert('📋 Copied to clipboard! You can now paste this into your API call.');
+            });
+        }
+        
+        // Modal functions
+        function openModal() {
+            document.getElementById('article-modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('article-modal').classList.remove('active');
+            document.getElementById('article-form').reset();
+        }
+        
+        // Form submission
+        document.getElementById('article-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const newArticle = {
+                id: Date.now().toString(),
+                city: document.getElementById('article-city').value,
+                title: document.getElementById('article-title').value,
+                subtitle: document.getElementById('article-subtitle').value,
+                content: document.getElementById('article-content').value,
+                keywords: document.getElementById('article-keywords').value.split(',').map(k => k.trim()),
+                summary: document.getElementById('article-summary').value,
+                status: 'draft',
+                createdAt: new Date().toISOString()
+            };
+            
+            articles.push(newArticle);
+            saveArticles();
+            closeModal();
+            
+            alert('✅ Article saved successfully!');
+        });
+        
+        function editArticle(id) {
+            const article = articles.find(a => a.id === id);
+            if (article) {
+                document.getElementById('article-city').value = article.city;
+                document.getElementById('article-title').value = article.title;
+                document.getElementById('article-subtitle').value = article.subtitle;
+                document.getElementById('article-content').value = article.content;
+                document.getElementById('article-keywords').value = article.keywords.join(', ');
+                document.getElementById('article-summary').value = article.summary;
+                
+                // Remove old article and open modal
+                articles = articles.filter(a => a.id !== id);
+                saveArticles();
+                openModal();
+            }
+        }
+        
+        function exportArticle(id) {
+            const article = articles.find(a => a.id === id);
+            if (article) {
+                generateExportJSON(article);
+            }
+        }
+        
+        function deleteArticle(id) {
+            if (confirm('Are you sure you want to delete this article?')) {
+                articles = articles.filter(a => a.id !== id);
+                saveArticles();
+            }
+        }
+        
+        // Close modal on outside click
+        document.getElementById('article-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'article-modal') {
+                closeModal();
+            }
+        });
+        
+        // Initialize
+        updateStats();
+        renderArticles();
+    </script>
+</body>
+</html>

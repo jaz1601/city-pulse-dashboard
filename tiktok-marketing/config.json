@@ -1,0 +1,19 @@
+{
+  "app": {
+    "name": "TikTok Marketing Automation",
+    "description": "Automated TikTok content creation and posting system",
+    "audience": "Adults 50+ who want to build online income through short-form video",
+    "problem": "Overwhelmed by tech, don't know what content to create, inconsistent posting",
+    "category": "productivity"
+  },
+  "imageGen": {
+    "provider": "artistly",
+    "apiKey": "35de5cea-e8d1-4b51-8697-d309f9d06e94",
+    "model": "default"
+  },
+  "uploadPost": {
+    "apiKey": "YOUR_UPLOAD_POST_KEY",
+    "profile": "yasmine_affiliate",
+    "platforms": ["tiktok", "instagram"]
+  }
+}
