@@ -174,7 +174,10 @@
     <div class="dashboard" id="dashboard">
         <div class="header">
             <h1>🏙️ City Pulse Dashboard</h1>
-            <button onclick="logout()" style="padding: 8px 16px; background: #f0f0f0; border: none; border-radius: 6px; cursor: pointer;">Logout</button>
+            <div>
+                <button onclick="syncWithLetterman()" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; margin-right: 10px;">🔄 Sync</button>
+                <button onclick="logout()" style="padding: 8px 16px; background: #f0f0f0; border: none; border-radius: 6px; cursor: pointer;">Logout</button>
+            </div>
         </div>
 
         <div class="main-content">
@@ -424,6 +427,51 @@
                 alert('Deleted!');
                 showCities();
             }
+        }
+
+        // Sync with Letterman
+        async function syncWithLetterman() {
+            const LETTERMAN_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWI0MjNlZDQ3ODcyYjI4YjRkZDcwZTkiLCJrZXkiOiI5YmNkZWY2ZjJjN2Q3MmRhOTMyNjExMmE2ZTRmYzZjZiIsImlkIjoiNjliNDI3Nzg0Nzg3MmIyOGI0ZGQ3NzQ3IiwiaWF0IjoxNzczNDE0MjY0LCJleHAiOjE4MDQ5NTAyNjR9.l5Yvk2m0Uhpl0t8OZ_ApRgsPXa9hcjxVzNbGrfTP3GY';
+            const cities = [
+                { key: 'cape-town', storageId: '69b8f1f847872b28b4e44ff5' },
+                { key: 'pretoria', storageId: '69b8f20747872b28b4e45014' },
+                { key: 'johannesburg', storageId: '69b8f21647872b28b4e45031' }
+            ];
+
+            alert('🔄 Syncing with Letterman...');
+            let totalSynced = 0;
+
+            for (const city of cities) {
+                try {
+                    const response = await fetch(`https://api.letterman.ai/api/newsletters-storage/${city.storageId}/newsletters?type=ARTICLE`, {
+                        headers: { 'Authorization': `Bearer ${LETTERMAN_API_KEY}` }
+                    });
+
+                    if (response.ok) {
+                        const lettermanArticles = await response.json();
+                        
+                        lettermanArticles.forEach(lmArticle => {
+                            const exists = articles.find(a => a.lettermanId === lmArticle._id);
+                            if (!exists) {
+                                articles.push({
+                                    id: Date.now().toString() + Math.random(),
+                                    lettermanId: lmArticle._id,
+                                    city: city.key,
+                                    headline: lmArticle.title,
+                                    content: lmArticle.summary?.content || '<p>No content</p>',
+                                    keywords: lmArticle.keywords || []
+                                });
+                                totalSynced++;
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Sync error for', city.key, error);
+                }
+            }
+
+            alert(`✅ Sync complete! Added ${totalSynced} new articles.`);
+            showCities();
         }
     </script>
 </body>
