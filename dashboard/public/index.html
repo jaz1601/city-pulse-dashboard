@@ -420,14 +420,15 @@
         // Real publish function with Letterman API
         async function publishArticle(articleId = null) {
             const id = articleId || document.getElementById('articleId').value;
-            const article = articles.find(a => a.id === id);
+            const result = findArticle(id);
             
-            if (!article) {
+            if (!result) {
                 showStatus('❌ Article not found', 'error');
                 return;
             }
-
-            const cityConfig = cityConfigs[article.city];
+            
+            const { article, city } = result;
+            const cityConfig = cityConfigs[city];
             if (!cityConfig) {
                 showStatus('❌ Invalid city configuration', 'error');
                 return;
@@ -569,15 +570,31 @@
             }
         }
 
+        // Helper function to find article across all cities
+        function findArticle(articleId) {
+            for (const city in articles) {
+                const article = articles[city].find(a => a.id === articleId);
+                if (article) {
+                    return { article, city };
+                }
+            }
+            return null;
+        }
+
         // Edit Article
         function editArticle(articleId) {
-            const article = articles.find(a => a.id === articleId);
-            if (!article) return;
+            const result = findArticle(articleId);
+            if (!result) {
+                alert('Article not found');
+                return;
+            }
+            
+            const { article, city } = result;
             
             // Populate form
             document.getElementById('articleId').value = article.id;
-            document.getElementById('articleCity').value = article.city;
-            document.getElementById('articleHeadline').value = article.headline;
+            document.getElementById('articleCity').value = city;
+            document.getElementById('articleHeadline').value = article.title || article.headline;
             document.getElementById('articleSubtitle').value = article.subtitle || '';
             document.getElementById('articleContent').value = article.content;
             document.getElementById('articleKeywords').value = (article.keywords || []).join(', ');
@@ -590,10 +607,14 @@
         // Delete Article
         function deleteArticle(articleId) {
             if (confirm('Are you sure you want to delete this article?')) {
-                articles = articles.filter(a => a.id !== articleId);
-                saveArticles();
-                showStatus('Article deleted', 'success');
-                location.reload();
+                const result = findArticle(articleId);
+                if (result) {
+                    const { city } = result;
+                    articles[city] = articles[city].filter(a => a.id !== articleId);
+                    saveArticles();
+                    showStatus('Article deleted', 'success');
+                    location.reload();
+                }
             }
         }
 
